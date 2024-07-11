@@ -1,5 +1,5 @@
 import { ApolloClient, gql } from "@apollo/client/core";
-import { Link, LinkExpressionInput, LinkExpression, LinkInput } from "../links/Links";
+import { Link, LinkExpression, LinkInput } from "../links/Links";
 import unwrapApolloResult from "../unwrapApolloResult";
 import { LinkQuery } from "./LinkQuery";
 import { Perspective } from "./Perspective";
@@ -179,15 +179,12 @@ export class PerspectiveClient {
         return perspectiveAddLinkExpression
     }
  
-    async updateLink(uuid: string, oldLink: LinkExpressionInput, newLink: LinkInput): Promise<LinkExpression> {
-        delete oldLink.__typename
-        delete oldLink.data.__typename
-        delete oldLink.proof.__typename
+    async updateLink(uuid: string, oldLink: String, newLink: LinkInput): Promise<LinkExpression> {
         const { perspectiveUpdateLink } = unwrapApolloResult(await this.#apolloClient.mutate({
             mutation: gql`mutation perspectiveUpdateLink(
                 $uuid: String!, 
-                $newLink: LinkInput!
-                $oldLink: LinkExpressionInput!
+                $newLink: LinkInput!,
+                $oldLink: String!
             ){
                 perspectiveUpdateLink(
                     newLink: $newLink, 
@@ -202,12 +199,9 @@ export class PerspectiveClient {
         return perspectiveUpdateLink
     }
 
-    async removeLink(uuid: string, link: LinkExpressionInput): Promise<{perspectiveRemoveLink: boolean}> {
-        delete link.__typename
-        delete link.data.__typename
-        delete link.proof.__typename
+    async removeLink(uuid: string, link: String): Promise<{perspectiveRemoveLink: boolean}> {
         return unwrapApolloResult(await this.#apolloClient.mutate({
-            mutation: gql`mutation perspectiveRemoveLink($link: LinkExpressionInput!, $uuid: String!) {
+            mutation: gql`mutation perspectiveRemoveLink($link: String!, $uuid: String!) {
                 perspectiveRemoveLink(link: $link, uuid: $uuid)
             }`,
             variables: { uuid, link }
@@ -221,7 +215,7 @@ export class PerspectiveClient {
 
     subscribePerspectiveAdded() {
         this.#apolloClient.subscribe({
-            query: gql` subscription {
+            query: gql`subscription {
                 perspectiveAdded { ${PERSPECTIVE_HANDLE_FIELDS} }
             }   
         `}).subscribe({
@@ -240,7 +234,7 @@ export class PerspectiveClient {
 
     subscribePerspectiveUpdated() {
         this.#apolloClient.subscribe({
-            query: gql` subscription {
+            query: gql`subscription {
                 perspectiveUpdated { ${PERSPECTIVE_HANDLE_FIELDS} }
             }   
         `}).subscribe({
@@ -259,7 +253,7 @@ export class PerspectiveClient {
 
     subscribePerspectiveRemoved() {
         this.#apolloClient.subscribe({
-            query: gql` subscription {
+            query: gql`subscription {
                 perspectiveRemoved
             }   
         `}).subscribe({
@@ -274,7 +268,7 @@ export class PerspectiveClient {
 
     async addPerspectiveLinkAddedListener(uuid: String, cb: LinkCallback[]): Promise<void> {
         this.#apolloClient.subscribe({
-            query: gql` subscription {
+            query: gql`subscription {
                 perspectiveLinkAdded(uuid: "${uuid}") { ${LINK_EXPRESSION_FIELDS} }
             }   
         `}).subscribe({
@@ -291,7 +285,7 @@ export class PerspectiveClient {
 
     async addPerspectiveLinkRemovedListener(uuid: String, cb: LinkCallback[]): Promise<void> {
         this.#apolloClient.subscribe({
-            query: gql` subscription {
+            query: gql`subscription {
                 perspectiveLinkRemoved(uuid: "${uuid}") { ${LINK_EXPRESSION_FIELDS} }
             }   
         `}).subscribe({

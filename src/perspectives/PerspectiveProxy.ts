@@ -53,7 +53,7 @@ export class PerspectiveProxy {
                             predicate: replaceThis(command.predicate), 
                             target: replaceThis(command.target)}))
                         for (const linkExpression of linkExpressions) {
-                            await this.remove(linkExpression)
+                            await this.remove(linkExpression.hash.toString())
                         }
                         break;
                 }
@@ -96,11 +96,11 @@ export class PerspectiveProxy {
         return await this.#client.addLink(this.#handle.uuid, link)
     }
 
-    async update(oldLink: LinkExpression, newLink: Link) {
+    async update(oldLink: String, newLink: Link) {
         return await this.#client.updateLink(this.#handle.uuid, oldLink, newLink)
     }
 
-    async remove(link: LinkExpression) {
+    async remove(link: String) {
         return await this.#client.removeLink(this.#handle.uuid, link)
     }
 
@@ -180,10 +180,7 @@ export class PerspectiveProxy {
         const query = new LinkQuery({source: link.source, predicate: link.predicate})
         const foundLinks = await this.get(query)
         for(const l of foundLinks){
-            delete l.__typename
-            delete l.data.__typename
-            delete l.proof.__typename
-            await this.remove(l)
+            await this.remove(l.hash.toString())
         }
             
         await this.add(link)
